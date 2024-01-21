@@ -1,19 +1,20 @@
-# Enterprise to Always
+# ERP Next Docker
 
-This repository include the setup script for Self hosting ERP Next on WSL or Linux.
+WIP(Learning)
 
-Run on Windows, remove ```platform: linux/amd64``` from each compose file.
+Self hosting ERP Next on WSL or Linux. The purpose is to organize ERPNext's docker compose can build it instantly.
+This repository refer [frappe/frappe_docker](https://github.com/frappe/frappe_docker.git), and added submodules.
 
-## Overview
+I mainly use in Ubuntu/Debian, if on Windows, remove ```platform: linux/amd64``` from each compose file.
 
-System summary
+## Services
 
 * Traefik
 * MariaDB
 * Redis
 * Frappe/ERPNext
 * ERPNext setup tools
-* Neko Remote web browser (as simple RDP)
+* Neko Remote web browser (Option as simple RDP)
 
 ## (Pre)Install Docker
 
@@ -60,14 +61,6 @@ docker compose --project-name traefik \
   --env-file traefik/traefik.env \
   -f traefik/compose.traefik.yaml \
   -f traefik/override.traefik-ssl.yaml up -d 
-```
-
-__if run localhost, exclude ssl yaml.__
-
-```
-docker compose --project-name traefik \
-  --env-file traefik/traefik.env \
-  -f traefik/compose.traefik.yaml up -d 
 ```
 
 ## Database setup
@@ -126,13 +119,4 @@ docker rmi -f $(docker images -a -q)
 docker volume rm $(docker volume ls -q)
 docker network rm $(docker network ls -q)
 docker system prune -a # remove cache
-```
-
-### Permission denied for sites directory
-
-easy fix
-```
-useradd -u 1000 erpuser
-usermod -aG root erpuser
-chown -R erpuser:root
 ```
