@@ -1,0 +1,136 @@
+version: "3"
+
+services:
+  backend:
+    platform: linux/amd64
+    image: frappe/erpnext:v15.10.3
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+    expose:
+      - 8000
+    networks:
+      - mariadb-network
+      - erpnext-network
+
+  frontend:
+    image: frappe/erpnext:v15.10.3
+    platform: linux/amd64
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - nginx-entrypoint.sh
+    environment:
+      BACKEND: backend:8000
+      FRAPPE_SITE_NAME_HEADER: frontend
+      SOCKETIO: websocket:9000
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+    expose:
+      - 8080
+    networks:
+      - traefik-public
+      - erpnext-network
+
+  queue-long:
+    image: frappe/erpnext:v15.10.3
+    platform: linux/amd64
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - bench
+      - worker
+      - --queue
+      - long,default,short
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+    networks:
+      - redis-network
+
+  queue-short:
+    image: frappe/erpnext:v15.10.3
+    platform: linux/amd64
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - bench
+      - worker
+      - --queue
+      - short,default
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+    networks:
+      - redis-network
+
+  scheduler:
+    image: frappe/erpnext:v15.10.3
+    platform: linux/amd64
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - bench
+      - schedule
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+
+  websocket:
+    image: frappe/erpnext:v15.10.3
+    platform: linux/amd64
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    volumes:
+      - erpnext-sites:/home/frappe/frappe-bench/sites:rw
+      - erpnext-logs:/home/frappe/frappe-bench/logs
+    ports:
+      - "127.0.0.1:9000:9000"
+    expose:
+      - 9000
+    networks:
+      - erpnext-network
+      - redis-network
+
+networks:
+  mariadb-network:
+    name: mariadb-network
+    external: true
+  redis-network:
+    name: redis-network
+    external: true
+  traefik-public:
+    name: traefik-public
+    external: true
+  erpnext-network:
+    name: erpnext-network
+    external: false
+
+volumes:
+  erpnext-db:
+    external: true
+  erpnext-redis-queue:
+    external: true
+  erpnext-redis-cache:
+    external: true
+  erpnext-logs:
+    external: true
+  erpnext-sites:
+    external: true

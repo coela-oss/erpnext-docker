@@ -1,0 +1,30 @@
+services:
+
+  mariadb:
+    container_name: mariadb
+    image: mariadb:10.6
+    restart: unless-stopped
+    healthcheck:
+      test: mysqladmin ping -h localhost --password=${DB_PASSWORD:-changeit}
+      interval: 1s
+      retries: 15
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeit}
+    volumes:
+      - erpnext-db:/var/lib/mysql
+    networks:
+      - mariadb-network
+
+networks:
+  mariadb-network:
+    name: mariadb-network
+    external: false
+
+volumes:
+  erpnext-db:
+    external: true

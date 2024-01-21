@@ -1,0 +1,36 @@
+services:
+
+  redis-cache:
+    container_name: redis-cache
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    volumes:
+      - erpnext-redis-cache:/data
+    networks:
+      - redis-network
+    expose:
+      - 6379
+      - 11311
+
+  redis-queue:
+    container_name: redis-queue
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    volumes:
+      - erpnext-redis-queue:/data
+    networks:
+      - redis-network
+    expose:
+      - 6379
+      - 11311
+
+networks:
+  redis-network:
+    name: redis-network
+    external: false
+
+volumes:
+  erpnext-redis-queue:
+    external: true
+  erpnext-redis-cache:
+    external: true
