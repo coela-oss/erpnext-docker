@@ -1,0 +1,10 @@
+services:
+  frontend:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.services.erpnext.loadbalancer.server.port=8080
+      - traefik.http.routers.erpnext-http.service=erpnext
+      - traefik.http.routers.erpnext-http.entrypoints=http
+      - traefik.http.routers.erpnext-http.rule=Host(`localhost`)
+      #- traefik.http.routers.erpnext-http.rule=HostRegexp(`{any:.+}`)
